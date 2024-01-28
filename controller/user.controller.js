@@ -1,6 +1,7 @@
 const db = require('../config')
 
 class UserController{
+
     async createUser(req,res){
         
         const {
@@ -19,13 +20,14 @@ class UserController{
         )
         res.json(newUser.rows[0])
     }   
-    async getAllUsers(req,res){
+
+    async getIDForUser(req,res){
         const {
             login,
             password} = req.body 
 
         const allUsers = await db.query(
-            `select * from Users where login=$1 AND password=$2`, [login,password]
+            `select * from users where login=$1 AND password=$2`, [login,password]
         )
         
 
@@ -33,18 +35,32 @@ class UserController{
         else res.json(allUsers.rows[0].id)
 
     }
-    async getOneUser(req,res){
 
-
-
+    async changeUserPassword(req,res){
+        const {  password,id } = req.body
+      
+        const newObject = await db.query(
+            `update users 
+            set  password = $1
+            where id = $2;`,
+            [   password,
+                id
+            ]
+        )
+        res.json(newObject.rows[0])
     }
-    async updateUser(req,res){
 
-    }
     async deleteUser(req,res){
-
+        const { id } = req.body
+      
+        await db.query(
+            `delete from users where id = $1;`, [ id]
+        )
+        res.json('deleted')
     }
-
+    
 }
+
+
 
 module.exports = new UserController()
