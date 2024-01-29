@@ -10,13 +10,14 @@ class ObjectController{
            address,
            inn,
            contact,
-           category
+           category,
+           image
         } = req.body
 
         name, address, inn, contact, category
         const newObject = await db.query(
-            `insert into object ( name, address, inn, contact, category) values ($1, $2, $3, $4, $5) returning *`,
-             [  name, address, inn, contact, category]
+            `insert into object ( name, address, inn, contact, category, image) values ($1, $2, $3, $4, $5, $6) returning *`,
+             [  name, address, inn, contact, category, image]
         )
         res.json(newObject.rows[0])
     }   
@@ -24,7 +25,7 @@ class ObjectController{
     async getAllObjectsForCurrentUser(req,res){
         const { contact } = req.body
         const newObject = await db.query(
-            `select * from  object where contact=$1;`,[contact]
+            `select * from  object where "contact"=$1;`,[contact]
         )
         res.json(newObject.rows[0])
     }
@@ -41,22 +42,25 @@ class ObjectController{
             address,
             inn,
             contact,
-            category, 
+            category,
+            image, 
             id } = req.body
       
         const newObject = await db.query(
             `update object 
-            set  name = $1,
-            set address = $2,
-            set inn = $3,
-            set contact = $4,
-            set category = $5
-            where id = $6;`,
+            set "name" = $1,
+            address = $2,
+            inn = $3,
+            contact = $4,
+            category = $5,
+            image = $6
+            where id = $7;`,
             [   name,
                 address,
                 inn,
                 contact,
                 category, 
+                image,
                 id
             ]
         )

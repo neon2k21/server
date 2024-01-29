@@ -37,14 +37,14 @@ class UserController{
     }
 
     async changeUserPassword(req,res){
-        const {  password,id } = req.body
+        const {  password,login } = req.body
       
         const newObject = await db.query(
             `update users 
             set  password = $1
-            where id = $2;`,
+            where login = $2;`,
             [   password,
-                id
+                login
             ]
         )
         res.json(newObject.rows[0])
