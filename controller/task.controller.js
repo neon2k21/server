@@ -36,7 +36,6 @@ class TaskController{
         const {
             
           object,
-          worker,
           task_stage,
           work_category,
           type_of_work, 
@@ -44,35 +43,45 @@ class TaskController{
 
         } = req.body
 
+        const getTotalInfo = await db.query(
+            `SELECT 
+                obj.id,
+                obj.category,
+                obj.image,
+                cat.master
+         FROM 
+             object obj
+         JOIN 
+             object_category cat ON obj.category = cat.id
+            WHERE obj.id=$1`, [object]
+        )
         const newTask = await db.query(
-            `insert into tasks (  object, worker, task_stage, work_category, type_of_work, date_of_creation, date_of_deadline, description) 
+            `insert into tasks (  object, worker, task_stage, work_category, type_of_work, date_of_creation, date_of_deadline, description, image) 
             values ($1, $2, $3, $4, $5, $6, $7, $8) returning *`,
-             [   object, worker, task_stage, work_category, type_of_work, postgresqlDate, data_for_deadline, description]
+             [   object, getTotalInfo.rows[0].master, task_stage, work_category, type_of_work, postgresqlDate, data_for_deadline, description, getTotalInfo.rows[0].image]
         )
         res.json(newTask.rows[0])
     }   
     
-    async getAllTasks(req,res){
+    async getAllTasks(req,res){   
 
         const newObject = await db.query(
-            `select * from  tasks;`
+            `select * from tasks;`
         )
-        for(let i = 0; i< newObject.rowCount;i++){
+        for(let i = 0; i < newObject.rowCount;i++){
             const daysDifference = Math.floor((newObject.rows[i].date_of_creation - newObject.rows[i].date_of_deadline) / (1000 * 60 * 60 * 24));
-            if(daysDifference > 1){
+            if(daysDifference > 1 && newObject.rows[i].task_stage < 6){
                 const check = await db.query(
                     `update tasks 
-                    set  stage = $1,
+                    set  task_stage = $1
                     where id = $2;`,
                     [  6, newObject.rows[i].id ]
                 )
                 res.json(check.rows[0])
             }
-            else{
-                 res.json(newObject.rows[0])
-            }
-        }
-       
+            
+         }
+         res.json(newObject.rows)
        
         
     }

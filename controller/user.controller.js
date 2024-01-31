@@ -25,6 +25,8 @@ class UserController{
         const {
             login,
             password} = req.body 
+            console.log(req.body)
+            console.log(login,password)
 
         const allUsers = await db.query(
             `select * from users where login=$1 AND password=$2`, [login,password]
