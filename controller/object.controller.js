@@ -27,7 +27,7 @@ class ObjectController{
         const newObject = await db.query(
             `select * from  object where "contact"=$1;`,[contact]
         )
-        res.json(newObject.rows[0])
+        res.json(newObject.rows)
     }
 
     async getAllObjects(req,res){
