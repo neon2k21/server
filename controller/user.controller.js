@@ -21,7 +21,7 @@ class UserController{
         res.json(newUser.rows[0])
     }   
 
-    async getIDForUser(req,res){
+    async getUser(req,res){
         const {
             login,
             password} = req.body 
@@ -34,7 +34,7 @@ class UserController{
         
 
         if(allUsers.rowCount===0) res.json('Логин или пароль не тот лол, а возможно и не зареган кек')
-        else res.json(allUsers.rows[0].id)
+        else res.json(allUsers.rows[0])
 
     }
 
