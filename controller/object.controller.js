@@ -30,6 +30,14 @@ class ObjectController{
         res.json(newObject.rows)
     }
 
+    async getSelectedObjectsForCurrentUser(req,res){
+        const { id } = req.body
+        const newObject = await db.query(
+            `select * from  object where "id"=$1;`,[id]
+        )
+        res.json(newObject.rows)
+    }
+
     async getAllObjects(req,res){
         const newObject = await db.query(
             `select * from  object;`

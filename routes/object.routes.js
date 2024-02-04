@@ -6,6 +6,7 @@ const objectController = require('../controller/object.controller')
 router.post('/object', objectController.createObject)
 router.get('/object', objectController.getAllObjects)
 router.post('/get_object', objectController.getAllObjectsForCurrentUser)
+router.post('/get_selected_object', objectController.getSelectedObjectsForCurrentUser)
 router.put('/object', objectController.updateObject)
 router.delete('/object', objectController.deleteObject)
 

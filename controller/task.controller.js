@@ -145,7 +145,7 @@ class TaskController{
 
     async getAllTasksForUser(req,res){   
 
-        const {id} = req.body;
+        const {id, object} = req.body;
         checkStage()
 
         const newObject = await db.query(
@@ -182,8 +182,8 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id        
-        where u.id = $1;
-        `,[id]
+        where u.id = $1 AND  t.object =$2;
+        `,[id, object]
         )
          res.json(newObject.rows)
     }
