@@ -4,8 +4,9 @@ const taskController = require('../controller/task.controller')
 
 
 router.post('/task', taskController.createTask)
-router.post('/gettasks', taskController.getAllTasksForUser)
-router.get('/task', taskController.getAllTasks)
+router.post('/getUsertask', taskController.getAllTasksForUser)
+router.post('/getAdmintask', taskController.getAllForAdminTasks)
+router.post('/getMastertask', taskController.getAllForMasterTasks)
 router.put('/task', taskController.updateTasks)
 router.delete('/task', taskController.deleteTasks)
 

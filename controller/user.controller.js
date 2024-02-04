@@ -33,7 +33,7 @@ class UserController{
         )
         
 
-        if(allUsers.rowCount===0) res.json('Логин или пароль не тот лол, а возможно и не зареган кек')
+        if(allUsers.rowCount===0) res.json('Данные не совпадают! Проверьте и повторите попытку')
         else res.json(allUsers.rows[0])
 
     }

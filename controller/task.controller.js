@@ -65,14 +65,39 @@ class TaskController{
     async getAllForAdminTasks(req,res){   
         checkStage()
         const newObject = await db.query(
-            `SELECT t.id, t.task_stage, t.work_category, t.type_of_work, t.date_of_creation, t.date_of_deadline, t.description, t.image, 
-            o.name, o.address, o.inn, o.contact, o.category, 
-            oc.master,
-           u.fio, u.login, u.password, u.role, u.phone
-            FROM tasks t
-            INNER JOIN object o ON t.object = o.id
-            INNER JOIN object_category oc ON o.category = oc.id
-            INNER JOIN users u ON t.worker = u.id;`)
+            `SELECT 
+            t.id AS task_id,
+            t.object AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            t.worker,
+            ts.stage AS task_stage,
+            t.work_category,
+            t.type_of_work,
+            t.date_of_creation,
+            t.date_of_deadline,
+            t.description,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.login AS user_login,
+            u.password AS user_password,
+            u.role AS user_role,
+            u.phone AS user_phone
+        FROM 
+            tasks t
+        JOIN 
+            object o ON t.object = o.id
+        JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            task_stage ts ON t.task_stage = ts.id
+        JOIN 
+            users u ON o.contact = u.id;`)
          res.json(newObject.rows)
     }
 
@@ -80,15 +105,40 @@ class TaskController{
         checkStage()
         const {id} = req.body;
         const newObject = await db.query(
-            `SELECT t.id, t.task_stage, t.work_category, t.type_of_work, t.date_of_creation, t.date_of_deadline, t.description, t.image, 
-            o.name, o.address, o.inn, o.contact, o.category, 
-            oc.master,
-           u.fio, u.login, u.password, u.role, u.phone
-            FROM tasks t
-            INNER JOIN object o ON t.object = o.id
-            INNER JOIN object_category oc ON o.category = oc.id
-            INNER JOIN users u ON t.worker = u.id
-            where oc.master = $1;`, [id])
+            `SELECT 
+            t.id AS task_id,
+            t.object AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            t.worker,
+            ts.stage AS task_stage,
+            t.work_category,
+            t.type_of_work,
+            t.date_of_creation,
+            t.date_of_deadline,
+            t.description,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.login AS user_login,
+            u.password AS user_password,
+            u.role AS user_role,
+            u.phone AS user_phone
+        FROM 
+            tasks t
+        JOIN 
+            object o ON t.object = o.id
+        JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            task_stage ts ON t.task_stage = ts.id
+        JOIN 
+            users u ON o.contact = u.id               
+        where oc.master = $1;`, [id])
          res.json(newObject.rows)
     }
 
@@ -106,27 +156,32 @@ class TaskController{
             o.address AS object_address,
             o.inn AS object_inn,
             o.contact AS object_contact,
-            o.category AS object_category,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
             o.image AS object_image,
+            t.worker,
+            ts.stage AS task_stage,
+            t.work_category,
+            t.type_of_work,
+            t.date_of_creation,
+            t.date_of_deadline,
+            t.description,
             u.id AS user_id,
             u.fio AS user_fio,
             u.login AS user_login,
             u.password AS user_password,
             u.role AS user_role,
-            u.phone AS user_phone,
-            t.worker,
-            t.task_stage,
-            t.work_category,
-            t.type_of_work,
-            t.date_of_creation,
-            t.date_of_deadline,
-            t.description
+            u.phone AS user_phone
         FROM 
             tasks t
         JOIN 
             object o ON t.object = o.id
         JOIN 
-            users u ON o.contact = u.id
+            object_category oc ON o.category = oc.id
+        JOIN 
+            task_stage ts ON t.task_stage = ts.id
+        JOIN 
+            users u ON o.contact = u.id        
         where u.id = $1;
         `,[id]
         )
