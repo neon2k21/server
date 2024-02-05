@@ -62,7 +62,8 @@ class TaskController{
         res.json(newTask.rows[0])
     }   
     
-    async getAllForAdminTasks(req,res){   
+    async getAllForAdminTasks(req,res){ 
+        const {object} = req.body  
         checkStage()
         const newObject = await db.query(
             `SELECT 
@@ -97,7 +98,8 @@ class TaskController{
         JOIN 
             task_stage ts ON t.task_stage = ts.id
         JOIN 
-            users u ON o.contact = u.id;`)
+            users u ON o.contact = u.id
+        WHERE t.object=$1;`,[object])
          res.json(newObject.rows)
     }
 

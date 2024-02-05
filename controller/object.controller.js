@@ -40,10 +40,119 @@ class ObjectController{
 
     async getAllObjects(req,res){
         const newObject = await db.query(
-            `select * from  object;`
+            `SELECT 
+            o.id AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone
+        FROM 
+            object o
+        JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            users u ON o.contact = u.id;`
         )
-        res.json(newObject.rows[0])
+        res.json(newObject.rows)
     }
+
+
+    async getAllObjectsByOwner(req,res){
+
+        const {id} = req.body
+
+        const newObject = await db.query(
+            `SELECT 
+            o.id AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone
+        FROM 
+            object o
+        JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            users u ON o.contact = u.id
+        WHERE  u.id=$1;`,[id]
+        )
+        res.json(newObject.rows)
+    }
+
+    async getAllObjectsByCategory(req,res){
+
+        const {category} = req.body;
+
+        const newObject = await db.query(
+            `SELECT 
+            o.id AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone
+        FROM 
+            object o
+        JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            users u ON o.contact = u.id
+            WHERE  oc.category= $1;`,[category]
+        )
+        res.json(newObject.rows)
+    }
+
+    async getAllObjectsByCategoryAndOwner(req,res){
+
+        const {id,category} = req.body
+
+        const newObject = await db.query(
+            `SELECT 
+            o.id AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone
+        FROM 
+            object o
+        JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            users u ON o.contact = u.id
+        WHERE u.id=$1 AND oc.category=$2;` , [id,category]
+        )
+        res.json(newObject.rows)
+    }
+
+
+
+
+
+
+
 
     async updateObject(req,res){
         const {  name,

@@ -38,6 +38,14 @@ class UserController{
 
     }
 
+
+    async getMaster(req,res){
+        
+        const allUsers = await db.query(`select * from users where role=2`)
+        res.json(allUsers.rows)
+
+    }
+
     async changeUserPassword(req,res){
         const {  password,login } = req.body
       
