@@ -1,71 +1,61 @@
 const db = require('../config')
-//`insert into times (time) values (to_timestamp(${Date.now()} / 1000.0))`
+const { format, addDays, isWeekend, differenceInDays, parse } = require('date-fns');
+
+
 class TaskController{
-    
-    
     
 
     async createTask(req,res){
-        const currentDateTime = Date.now();
-        const postgresqlDate = convertToPostgreSQLDate(currentDateTime);
-        console.log("Дата в формате PostgreSQL:", postgresqlDate);
+      
+        // 1) Получаем актуальную дату и конвертируем ее в строку
+        const today = new Date();
+        const formattedToday = format(today, 'yyyy-MM-dd');
 
-
-        const dateReceived = Date.now();
-        const receivedDate = new Date(dateReceived);
-
-
-        // Добавление 3 дней к дате получения заявки
-        const deadlineDate = new Date(receivedDate.getTime() + (3 * 24 * 60 * 60 * 1000));
-        
-        // Проверка, если дедлайн выпадает на выходной, то сдвигаем его до понедельника
-        if (deadlineDate.getDay() === 0) { // Воскресенье
-            deadlineDate.setDate(deadlineDate.getDate() + 1); // Сдвигаем на понедельник
-        } else if (deadlineDate.getDay() === 6) { // Суббота
-            deadlineDate.setDate(deadlineDate.getDate() + 2); // Сдвигаем на понедельник
+        // 2) Устанавливаем дедлайн через 3 рабочих дня, игнорируя выходные
+        let deadline = addDays(today, 3);
+        while (isWeekend(deadline)) {
+            deadline = addDays(deadline, 1);
         }
-        
-        // Проверка на просроченный дедлайн
-        
-        
-        const data_for_deadline = deadlineDate.toDateString();
-        
 
+        // 3) Конвертируем дедлайн из строки в дату и проверяем на просрочку
+        const formattedDeadline = format(deadline, 'yyyy-MM-dd');
+       
 
-
-        const {
-            
-          object,
-          work_category,
-          type_of_work, 
-          description
-
-        } = req.body
-
-        const getTotalInfo = await db.query(
+       
+        const { object, work_category, type_of_work, description} = req.body
+        const sql1 = (
             `SELECT 
-                obj.id,
-                obj.category,
-                obj.image,
-                cat.master
-         FROM 
-             object obj
-         JOIN 
-             object_category cat ON obj.category = cat.id
-            WHERE obj.id=$1`, [object]
+            obj.id,
+            obj.category,
+            obj.image,
+            cat.master
+     FROM 
+         object obj
+     JOIN 
+         object_category cat ON obj.category = cat.id
+        WHERE obj.id=?;`
         )
-        const newTask = await db.query(
-            `insert into tasks (  object, worker, task_stage, work_category, type_of_work, date_of_creation, date_of_deadline, description, image) 
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *`,
-             [   object, getTotalInfo.rows[0].master, 1, work_category, type_of_work, postgresqlDate, data_for_deadline, description, getTotalInfo.rows[0].image]
-        )
-        res.json(newTask.rows[0])
+        
+       const sql1_result = await getInfoForCreate(db,object)
+        console.log(sql1_result)
+
+
+        const sql2 = (
+        `insert into tasks (  object, worker, task_stage, work_category, type_of_work, date_of_creation, date_of_deadline, description, image) 
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        db.all(sql2,[
+            object, sql1_result.master, 1, work_category, type_of_work,
+            formattedToday, formattedDeadline, description,sql1_result.image
+                    ], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+        })
     }   
     
     async getAllForAdminTasks(req,res){ 
-        const {object} = req.body  
-        checkStage()
-        const newObject = await db.query(
+       checkStage()
+        const { object } = req.body
+        const sql = (
             `SELECT 
             t.id AS task_id,
             t.object AS object_id,
@@ -99,14 +89,22 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id
-        WHERE t.object=$1;`,[object])
-         res.json(newObject.rows)
+        WHERE t.object=?;`
+        )
+       
+        db.all(sql,[object], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+        })
+
+  
+       
     }
 
     async getAllForMasterTasks(req,res){   
         checkStage()
         const {id} = req.body;
-        const newObject = await db.query(
+        const sql = (
             `SELECT 
             t.id AS task_id,
             t.object AS object_id,
@@ -140,17 +138,21 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id               
-        where oc.master = $1;`, [id])
-         res.json(newObject.rows)
+        where oc.master = ?;`)
+        
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
     }
 
 
     async getAllTasksForUser(req,res){   
-
-        const {id, object} = req.body;
         checkStage()
+        const {id, object} = req.body;
 
-        const newObject = await db.query(
+        const sql = (
             `SELECT 
             t.id AS task_id,
             t.object AS object_id,
@@ -170,9 +172,6 @@ class TaskController{
             t.description,
             u.id AS user_id,
             u.fio AS user_fio,
-            u.login AS user_login,
-            u.password AS user_password,
-            u.role AS user_role,
             u.phone AS user_phone
         FROM 
             tasks t
@@ -184,78 +183,105 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id        
-        where u.id = $1 AND  t.object =$2;
-        `,[id, object]
-        )
-         res.json(newObject.rows)
+        where u.id = ? AND t.object = ?;`)
+            db.all(sql,[id, object], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
     }
 
 
 
     async updateTasks(req,res){
-        const {     object,
-                    worker,
-                    task_stage,
-                    work_category,
-                    type_of_work, 
-                    description,
-                    id } = req.body
-      
-        const newObject = await db.query(
+
+        const { object, worker, task_stage, work_category, type_of_work, description, id} = req.body
+        const sql = (
             `update tasks 
-           set object = $1,
-           worker = $2,
-            task_stage = $3,
-            work_category = $4,
-            type_of_work = $5,
-            description = $6
-            where id = $7;`,
-            [    object,
-                worker,
-                task_stage,
-                work_category,
-                type_of_work, 
-                description,
-                id
-            ]
+            set object = ?,
+            worker = ?,
+             task_stage = ?,
+             work_category = ?,
+             type_of_work = ?,
+             description = ?
+             where id = ?;`
         )
-        res.json(newObject.rows[0])
+        db.all(sql,[object, worker, task_stage, work_category, type_of_work, description, id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
     }
 
     async deleteTasks(req,res){
+
         const { id } = req.body
-      
-        await db.query(
-            `delete from tasks where id = $1;`, [ id]
+        const sql = (
+            `delete from tasks where id =?;`
         )
-        res.json('deleted')
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else res.json(rows)
+         })
+       
     }
 
 }
-function convertToPostgreSQLDate(date) {
-    // Преобразование даты в объект Date
-    const jsDate = new Date(date);
-    
-    // Получение года, месяца и дня
-    const year = jsDate.getFullYear();
-    const month = (jsDate.getMonth() + 1).toString().padStart(2, '0'); // добавляем ведущий ноль, если месяц состоит из одной цифры
-    const day = jsDate.getDate().toString().padStart(2, '0'); // добавляем ведущий ноль, если день состоит из одной цифры
-    
-    // Формирование строки в формате PostgreSQL
-    const postgresqlDate = `${year}-${month}-${day}`;
-    
-    return postgresqlDate;
-}
+
 
 async function checkStage(){
-    const newObject = await db.query('select * from tasks;')
-    for(let i = 0; i < newObject.rowCount;i++){
-        const daysDifference = Math.floor((newObject.rows[i].date_of_creation - newObject.rows[i].date_of_deadline) / (1000 * 60 * 60 * 24));
-        if(daysDifference > 1 && newObject.rows[i].task_stage < 6){
-        await db.query(`update tasks set task_stage = $1 where id = $2;`, [ 6, newObject.rows[i].id ])
+   
+    const newObject = await getInfoForCheckStage(db)
+   
+    for(let i = 0; i < newObject.rows.length;i++){
+        const dateString_deadline = newObject.rows[i].date_of_deadline;
+        const dateObject_deadline = new Date(dateString_deadline);
+        const dateString_creation = newObject.rows[i].date_of_creation;
+        const dateObject_creation = new Date(dateString_creation);
+
+        const daysDifference = Math.floor((dateObject_creation - dateObject_deadline) / (1000 * 60 * 60 * 24));
+        console.log(daysDifference)
+        if(daysDifference < -10 && newObject.rows[i].task_stage < 6 && newObject.rows[i].completed === null){
+        await db.all(`update tasks set task_stage = 6 where id = ?;`, [ newObject.rows[i].id ])
         }
      }
 }
 
+async function getInfoForCheckStage(db) {
+    return new Promise((resolve, reject) => {
+        var responseObj;
+        db.all(`select * from tasks;`,(err, rows) => {
+            if (err) {
+                responseObj = {
+                  'error': err
+                };
+                reject(responseObj);
+              } else {
+                responseObj = {
+                  rows: rows
+                };
+                resolve(responseObj);
+            }
+        });
+    });
+}
+
+async function getInfoForCreate(db, id) {
+    return new Promise((resolve, reject) => {
+        db.get(
+        `SELECT 
+        obj.id,
+        obj.category,
+        obj.image,
+        cat.master
+ FROM 
+     object obj
+ JOIN 
+     object_category cat ON obj.category = cat.id
+    WHERE obj.id=?;`,[id],(err, row) => {
+            if (err) reject(err); // I assume this is how an error is thrown with your db callback
+            resolve(row);
+        });
+    });
+}
 
 module.exports = new TaskController()

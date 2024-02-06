@@ -4,71 +4,52 @@ class UserController{
 
     async createUser(req,res){
         
-        const {
-            
-            fio,
-            login,
-            password,
-            role,
-            phone
-        } = req.body
-        console.log( fio, login, password, role, phone)
-
-        const newUser = await db.query(
-            `insert into users (fio, login, password, role, phone) values ($1, $2, $3, $4, $5) returning *`,
-             [ fio, login, password, role, phone]
+        const { fio, login, password, role, phone } = req.body
+        const sql = (
+            `insert into users (fio, login, password, role, phone) values (?, ?, ?, ?, ?);`
         )
-        res.json(newUser.rows[0])
+        db.all(sql,[fio, login, password, role, phone], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+
     }   
 
     async getUser(req,res){
-        const {
-            login,
-            password} = req.body 
-            console.log(req.body)
-            console.log(login,password)
-
-        const allUsers = await db.query(
-            `select * from users where login=$1 AND password=$2`, [login,password]
+        const { login, password} = req.body
+        console.log(login, password)
+        const sql = (
+            `select * from users where login=? AND password=?;`
         )
-        
-
-        if(allUsers.rowCount===0) res.json('Данные не совпадают! Проверьте и повторите попытку')
-        else res.json(allUsers.rows[0])
-
+        db.all(sql,[login,password], (err,rows) => {
+            if (err) return res.json(err)
+            if(rows.length === 0) return res.json('Данные не совпадают! Проверьте и повторите попытку')
+            else res.json(rows)
+    })
     }
-
 
     async getMaster(req,res){
-        
-        const allUsers = await db.query(`select * from users where role=2`)
-        res.json(allUsers.rows)
-
-    }
-
-    async changeUserPassword(req,res){
-        const {  password,login } = req.body
-      
-        const newObject = await db.query(
-            `update users 
-            set  password = $1
-            where login = $2;`,
-            [   password,
-                login
-            ]
+     
+        const sql = (
+            `select * from users where role=2;`
         )
-        res.json(newObject.rows[0])
+        db.all(sql,[], (err,rows) => {
+            if (err) return res.json(err)
+            else res.json(rows)
+    })
     }
 
     async deleteUser(req,res){
         const { id } = req.body
-      
-        await db.query(
-            `delete from users where id = $1;`, [ id]
+        const sql = (
+            `delete from users where id =?;`
         )
-        res.json('deleted')
-    }
-    
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else res.json(rows)
+         })
+        
+    }    
 }
 
 

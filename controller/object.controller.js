@@ -1,73 +1,107 @@
 const db = require('../config')
 
 class ObjectController{
-    
-    async createObject(req,res){
-        
-        const {
-            
-           name,
-           address,
-           inn,
-           contact,
-           category,
-           image
-        } = req.body
 
-        name, address, inn, contact, category
-        const newObject = await db.query(
-            `insert into object ( name, address, inn, contact, category, image) values ($1, $2, $3, $4, $5, $6) returning *`,
-             [  name, address, inn, contact, category, image]
+    async createObject(req,res){
+            
+        const { name, address, inn, contact, category, image } = req.body
+        const sql = (
+            `insert into object ( name, address, inn, contact, category, image) values ($1, $2, $3, $4, $5, $6);`
         )
-        res.json(newObject.rows[0])
-    }   
+        db.all(sql,[name, address, inn, contact, category, image], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+    } 
     
-    async getAllObjectsForCurrentUser(req,res){
-        const { contact } = req.body
-        const newObject = await db.query(
-            `select * from  object where "contact"=$1;`,[contact]
+    async updateObject(req,res){
+        const { name, address, inn, contact, category, image, id } = req.body
+        const sql = (
+            `update object 
+            set name = ?,
+            address = ?,
+            inn = ?,
+            contact = ?,
+            category = ?,
+            image = ?
+            where id = ?;`
         )
-        res.json(newObject.rows)
+        db.all(sql,[name, address, inn, contact, category, image, id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
+    }
+
+    async deleteObject(req,res){
+        const { id } = req.body
+        const sql = (
+            `delete from object where id = ?;`
+        )
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
+    }
+
+
+    async getAllObjectsForCurrentUser(req,res){
+        
+        const { contact } = req.body
+        const sql = (
+            `select * from object where "contact"=?;`
+        )
+        db.all(sql,[contact], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
     }
 
     async getSelectedObjectsForCurrentUser(req,res){
         const { id } = req.body
-        const newObject = await db.query(
-            `select * from  object where "id"=$1;`,[id]
+        const sql = (
+            `select * from object where "id"=?;`
         )
-        res.json(newObject.rows)
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
     }
 
-    async getAllObjects(req,res){
-        const newObject = await db.query(
-            `SELECT 
-            o.id AS object_id,
-            o.name AS object_name,
-            o.address AS object_address,
-            o.inn AS object_inn,
-            o.contact AS object_contact,
-            oc.category AS object_category,
-            oc.master AS object_category_master,
-            o.image AS object_image,
-            u.id AS user_id,
-            u.fio AS user_fio,
-            u.phone AS user_phone
-        FROM 
-            object o
-        JOIN 
-            object_category oc ON o.category = oc.id
-        JOIN 
-            users u ON o.contact = u.id;`
-        )
-        res.json(newObject.rows)
-    }
+   async getAllObjects(req,res){
 
+        const sql = 
+        `SELECT 
+        o.id AS object_id,
+        o.name AS object_name,
+        o.address AS object_address,
+        o.inn AS object_inn,
+        o.contact AS object_contact,
+        oc.category AS object_category,
+        oc.master AS object_category_master,
+        o.image AS object_image,
+        u.id AS user_id,
+        u.fio AS user_fio,
+        u.phone AS user_phone
+    FROM 
+        object AS o
+    JOIN 
+        object_category AS oc ON o.category = oc.id
+    JOIN 
+        users AS u ON o.contact = u.id;`
+       await db.all(sql,[], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+       })
+
+    }
 
     async getAllObjectsByOwner(req,res){
 
         const {id} = req.body
-
-        const newObject = await db.query(
+       
+        const sql = 
             `SELECT 
             o.id AS object_id,
             o.name AS object_name,
@@ -86,23 +120,27 @@ class ObjectController{
             object_category oc ON o.category = oc.id
         JOIN 
             users u ON o.contact = u.id
-        WHERE  u.id=$1;`,[id]
-        )
-        res.json(newObject.rows)
+        WHERE  u.id= ?;`
+
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+       })
     }
 
     async getAllObjectsByCategory(req,res){
 
         const {category} = req.body;
 
-        const newObject = await db.query(
+        const sql =
             `SELECT 
             o.id AS object_id,
             o.name AS object_name,
             o.address AS object_address,
             o.inn AS object_inn,
             o.contact AS object_contact,
-            oc.category AS object_category,
+            oc.id AS object_category_id,
+			oc.category AS object_category,
             oc.master AS object_category_master,
             o.image AS object_image,
             u.id AS user_id,
@@ -114,23 +152,27 @@ class ObjectController{
             object_category oc ON o.category = oc.id
         JOIN 
             users u ON o.contact = u.id
-            WHERE  oc.category= $1;`,[category]
-        )
-        res.json(newObject.rows)
+            WHERE  oc.id=?;`
+
+            db.all(sql,[category], (err,rows) => {
+                if (err) return res.json(err)
+                else return res.json(rows)
+           })
     }
 
     async getAllObjectsByCategoryAndOwner(req,res){
 
         const {id,category} = req.body
 
-        const newObject = await db.query(
+       const sql = 
             `SELECT 
             o.id AS object_id,
             o.name AS object_name,
             o.address AS object_address,
             o.inn AS object_inn,
             o.contact AS object_contact,
-            oc.category AS object_category,
+            oc.id AS object_category_id,
+			oc.category AS object_category,
             oc.master AS object_category_master,
             o.image AS object_image,
             u.id AS user_id,
@@ -142,57 +184,14 @@ class ObjectController{
             object_category oc ON o.category = oc.id
         JOIN 
             users u ON o.contact = u.id
-        WHERE u.id=$1 AND oc.category=$2;` , [id,category]
-        )
-        res.json(newObject.rows)
+        WHERE u.id=? AND oc.id=?;`
+        
+        db.all(sql,[id, category], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+       })
     }
-
-
-
-
-
-
-
-
-    async updateObject(req,res){
-        const {  name,
-            address,
-            inn,
-            contact,
-            category,
-            image, 
-            id } = req.body
-      
-        const newObject = await db.query(
-            `update object 
-            set "name" = $1,
-            address = $2,
-            inn = $3,
-            contact = $4,
-            category = $5,
-            image = $6
-            where id = $7;`,
-            [   name,
-                address,
-                inn,
-                contact,
-                category, 
-                image,
-                id
-            ]
-        )
-        res.json(newObject.rows[0])
-    }
-
-    async deleteObject(req,res){
-        const { id } = req.body
-      
-        await db.query(
-            `delete from object where id = $1;`, [ id]
-        )
-        res.json('deleted')
-    }
-
+  
 }
 
 module.exports = new ObjectController()

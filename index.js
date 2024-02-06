@@ -14,13 +14,6 @@ app.use('/api',objectRouter)
 app.use('/api',taskRouter)
 
 
-
-
-
-
-
-
-
 app.listen(PORT, () => console.log(`Сервер запущен с портом: ${PORT}`))
 
 

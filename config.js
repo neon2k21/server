@@ -1,11 +1,7 @@
-const Pool = require('pg').Pool
-
-const pool = new Pool( {
-    user: 'postgres',
-    password: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    database: 'postgres'
+const sqlite = require("sqlite3").verbose();
+const db = new sqlite.Database("./db/db.db", sqlite.OPEN_READWRITE,(err) => {
+    if(err) return console.error(err);
 })
 
-module.exports = pool
+
+module.exports = db
