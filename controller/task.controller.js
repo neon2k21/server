@@ -240,7 +240,7 @@ async function checkStage(){
 
         const daysDifference = Math.floor((dateObject_creation - dateObject_deadline) / (1000 * 60 * 60 * 24));
         console.log(daysDifference)
-        if(daysDifference < -10 && newObject.rows[i].task_stage < 6 && newObject.rows[i].completed === null){
+        if(daysDifference > 1 && newObject.rows[i].task_stage < 6 && newObject.rows[i].completed === null){
         await db.all(`update tasks set task_stage = 6 where id = ?;`, [ newObject.rows[i].id ])
         }
      }
