@@ -23,19 +23,7 @@ class TaskController{
 
        
         const { object, work_category, type_of_work, description} = req.body
-        const sql1 = (
-            `SELECT 
-            obj.id,
-            obj.category,
-            obj.image,
-            cat.master
-     FROM 
-         object obj
-     JOIN 
-         object_category cat ON obj.category = cat.id
-        WHERE obj.id=?;`
-        )
-        
+              
        const sql1_result = await getInfoForCreate(db,object)
         console.log(sql1_result)
 
@@ -67,24 +55,28 @@ class TaskController{
             oc.master AS object_category_master,
             o.image AS object_image,
             t.worker,
+			ts.id AS task_stage_id,
             ts.stage AS task_stage,
-            t.work_category,
-            t.type_of_work,
+            t.work_category as work_category_id,
+			wc.name as work_category_name,
+            t.type_of_work as type_of_work_id,
+			tw.type as type_of_work_id,
             t.date_of_creation,
             t.date_of_deadline,
             t.description,
             u.id AS user_id,
             u.fio AS user_fio,
-            u.login AS user_login,
-            u.password AS user_password,
-            u.role AS user_role,
             u.phone AS user_phone
         FROM 
             tasks t
         JOIN 
             object o ON t.object = o.id
-        JOIN 
+		JOIN 
             object_category oc ON o.category = oc.id
+        JOIN 
+            type_of_work tw ON t.type_of_work = tw.id
+        JOIN 
+            work_category wc ON t.work_category = wc.id
         JOIN 
             task_stage ts ON t.task_stage = ts.id
         JOIN 
@@ -116,17 +108,161 @@ class TaskController{
             oc.master AS object_category_master,
             o.image AS object_image,
             t.worker,
+			ts.id AS task_stage_id,
             ts.stage AS task_stage,
-            t.work_category,
-            t.type_of_work,
+            t.work_category as work_category_id,
+			wc.name as work_category_name,
+            t.type_of_work as type_of_work_id,
+			tw.type as type_of_work_name,
             t.date_of_creation,
             t.date_of_deadline,
             t.description,
             u.id AS user_id,
             u.fio AS user_fio,
-            u.login AS user_login,
-            u.password AS user_password,
-            u.role AS user_role,
+            u.phone AS user_phone
+        FROM 
+            tasks t
+        JOIN 
+            object o ON t.object = o.id
+		JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            type_of_work tw ON t.type_of_work = tw.id
+        JOIN 
+            work_category wc ON t.work_category = wc.id
+        JOIN 
+            task_stage ts ON t.task_stage = ts.id
+        JOIN 
+            users u ON o.contact = u.id              
+        where oc.master = ?;`)
+        
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    }) 
+    }
+
+
+    async getAllForMasterTasksByObjectAndStage(req,res){   
+        checkStage()
+        const {id_object, id_stage} = req.body;
+        const sql = (
+            `SELECT 
+            t.id AS task_id,
+            t.object AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            t.worker,
+			ts.id AS task_stage_id,
+            ts.stage AS task_stage,
+            t.work_category as work_category_id,
+			wc.name as work_category_name,
+            t.type_of_work as type_of_work_id,
+			tw.type as type_of_work_name,
+            t.date_of_creation,
+            t.date_of_deadline,
+            t.description,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone
+        FROM 
+            tasks t
+        JOIN 
+            object o ON t.object = o.id
+		JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            type_of_work tw ON t.type_of_work = tw.id
+        JOIN 
+            work_category wc ON t.work_category = wc.id
+        JOIN 
+            task_stage ts ON t.task_stage = ts.id
+        JOIN 
+            users u ON o.contact = u.id              
+        where  t.object = ? and ts.id = ?;`)
+        
+        db.all(sql,[id_object, id_stage], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    }) 
+    }
+
+    async getAllForMasterTasks(req,res){   
+        checkStage()
+        const {id} = req.body;
+        const sql = (
+            `SELECT 
+            t.id AS task_id,
+            t.object AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            t.worker,
+			ts.id AS task_stage_id,
+            ts.stage AS task_stage,
+            t.work_category as work_category_id,
+			wc.name as work_category_name,
+            t.type_of_work as type_of_work_id,
+			tw.type as type_of_work_name,
+            t.date_of_creation,
+            t.date_of_deadline,
+            t.description,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone
+        FROM 
+            tasks t
+        JOIN 
+            object o ON t.object = o.id
+		JOIN 
+            object_category oc ON o.category = oc.id
+        JOIN 
+            type_of_work tw ON t.type_of_work = tw.id
+        JOIN 
+            work_category wc ON t.work_category = wc.id
+        JOIN 
+            task_stage ts ON t.task_stage = ts.id
+        JOIN 
+            users u ON o.contact = u.id              
+        where oc.master = ?;`)
+        
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    }) 
+    }
+
+
+    async getTaskByID(req,res){   
+        const {id} = req.body;
+        const sql = (
+            `SELECT 
+            t.id AS task_id,
+            t.object AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            t.worker,
+            ts.id AS task_stage_id,
+            ts.stage AS task_stage,
+            t.work_category,
+            t.type_of_work,
+            t.date_of_deadline,
+            t.description,
+            u.fio AS user_fio,
             u.phone AS user_phone
         FROM 
             tasks t
@@ -138,15 +274,13 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id               
-        where oc.master = ?;`)
+        where  t.id = ?;`)
         
         db.all(sql,[id], (err,rows) => {
             if (err) return res.json(err)
             else return res.json(rows)
-    })
-        
+    }) 
     }
-
 
     async getAllTasksForUser(req,res){   
         checkStage()
@@ -164,9 +298,12 @@ class TaskController{
             oc.master AS object_category_master,
             o.image AS object_image,
             t.worker,
+			ts.id AS task_stage_id,
             ts.stage AS task_stage,
-            t.work_category,
-            t.type_of_work,
+            t.work_category as work_category_id,
+			wc.name as work_category_name,
+            t.type_of_work as type_of_work_id,
+			tw.type as type_of_work_id,
             t.date_of_creation,
             t.date_of_deadline,
             t.description,
@@ -177,8 +314,12 @@ class TaskController{
             tasks t
         JOIN 
             object o ON t.object = o.id
-        JOIN 
+		JOIN 
             object_category oc ON o.category = oc.id
+        JOIN 
+            type_of_work tw ON t.type_of_work = tw.id
+        JOIN 
+            work_category wc ON t.work_category = wc.id
         JOIN 
             task_stage ts ON t.task_stage = ts.id
         JOIN 
@@ -190,14 +331,60 @@ class TaskController{
     })
     }
 
+    async CancelTasks(req,res){
 
+        const {id} = req.body
+        const sql = (
+            `update tasks 
+            set 
+             task_stage = 3
+             where id = ?;`
+        )
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
+    }
+
+    async AcceptTasks(req,res){
+
+        const {id} = req.body
+        const sql = (
+            `update tasks 
+            set 
+             task_stage = 5
+             where id = ?;`
+        )
+        db.all(sql,[id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
+    }
+
+    async updateDescTasks(req,res){
+
+        const { description, id} = req.body
+        const sql = (
+            `update tasks 
+            set 
+             description = ?
+             where id = ?;`
+        )
+        db.all(sql,[description, id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
+    }
 
     async updateTasks(req,res){
 
-        const { object, worker, task_stage, work_category, type_of_work, description, id} = req.body
+        const { worker, task_stage, work_category, type_of_work, description, id} = req.body
         const sql = (
             `update tasks 
-            set object = ?,
+            set 
             worker = ?,
              task_stage = ?,
              work_category = ?,
@@ -205,7 +392,24 @@ class TaskController{
              description = ?
              where id = ?;`
         )
-        db.all(sql,[object, worker, task_stage, work_category, type_of_work, description, id], (err,rows) => {
+        db.all(sql,[worker, task_stage, work_category, type_of_work, description, id], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+        
+    }
+
+    async MasterUpdateTasks(req,res){
+
+        const { task_stage, description, id} = req.body
+        const sql = (
+            `update tasks 
+            set 
+             task_stage = ?,
+             description = ?
+             where id = ?;`
+        )
+        db.all(sql,[ task_stage, description, id], (err,rows) => {
             if (err) return res.json(err)
             else return res.json(rows)
     })
