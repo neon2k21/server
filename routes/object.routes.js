@@ -5,6 +5,7 @@ const objectController = require('../controller/object.controller')
 
 router.post('/object', objectController.createObject)
 router.get('/object', objectController.getAllObjects)
+router.get('/admin_object', objectController.getAllObjectsAdmin)
 router.post('/get_object', objectController.getAllObjectsForCurrentUser)
 router.post('/get_object_owner', objectController.getAllObjectsByOwner)
 router.post('/get_object_category', objectController.getAllObjectsByCategory)

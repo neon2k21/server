@@ -81,7 +81,9 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id
-        WHERE t.object=?;`
+        WHERE t.object=?
+        ORDER BY 
+            ts.id ASC;`
         )
        
         db.all(sql,[object], (err,rows) => {
@@ -134,7 +136,9 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id              
-        where oc.master = ?;`)
+        where oc.master = ?  AND ts.id = 1 or ts.id = 2 or ts.id = 4 or ts.id = 5
+        ORDER BY 
+        ts.id ASC;`)
         
         db.all(sql,[id], (err,rows) => {
             if (err) return res.json(err)
@@ -184,7 +188,7 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id              
-        where  t.object = ? and ts.id = ?;`)
+        where  t.object = ? and ts.id = ?`)
         
         db.all(sql,[id_object, id_stage], (err,rows) => {
             if (err) return res.json(err)
@@ -233,7 +237,9 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id              
-        where oc.master = ?;`)
+        where oc.master = ? AND ts.id = 1 or ts.id = 2 or ts.id = 4 or ts.id = 5
+        ORDER BY 
+            ts.id ASC;`)
         
         db.all(sql,[id], (err,rows) => {
             if (err) return res.json(err)
@@ -274,7 +280,9 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id               
-        where  t.id = ?;`)
+        where  t.id = ?
+        ORDER BY 
+            ts.id ASC;`)
         
         db.all(sql,[id], (err,rows) => {
             if (err) return res.json(err)
@@ -324,7 +332,9 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id        
-        where u.id = ? AND t.object = ?;`)
+        where u.id = ? AND t.object = ?
+        ORDER BY 
+            ts.id ASC;`)
             db.all(sql,[id, object], (err,rows) => {
             if (err) return res.json(err)
             else return res.json(rows)

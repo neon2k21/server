@@ -45,6 +45,39 @@ class ObjectController{
         
     }
 
+    async getAllObjectsAdmin(req,res){
+        
+        const { contact } = req.body
+        const sql = (
+            `SELECT 
+            o.id AS object_id,
+            o.name AS object_name,
+            o.address AS object_address,
+            o.inn AS object_inn,
+            o.contact AS object_contact,
+            oc.category AS object_category,
+            oc.master AS object_category_master,
+            o.image AS object_image,
+            u.id AS user_id,
+            u.fio AS user_fio,
+            u.phone AS user_phone,
+            SUM(CASE WHEN tasks.task_stage = 4 THEN 1 ELSE 0 END) AS tasks_count
+        FROM 
+            object AS o
+        JOIN 
+            object_category AS oc ON o.category = oc.id
+        JOIN 
+            users AS u ON o.contact = u.id
+        LEFT JOIN 
+            tasks ON o.id = tasks.object
+        GROUP BY 
+            o.id, o.name, o.address, o.inn, o.category, o.image, o.contact;`
+        )
+        db.all(sql,[contact], (err,rows) => {
+            if (err) return res.json(err)
+            else return res.json(rows)
+    })
+    }
 
     async getAllObjectsForCurrentUser(req,res){
         
