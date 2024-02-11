@@ -136,7 +136,7 @@ class TaskController{
             task_stage ts ON t.task_stage = ts.id
         JOIN 
             users u ON o.contact = u.id              
-        where oc.master = ?  AND ts.id = 1 or ts.id = 2 or ts.id = 4 or ts.id = 5
+        where oc.master = ?  AND (ts.id = 1 or ts.id = 2 or ts.id = 4 or ts.id = 5)
         ORDER BY 
         ts.id ASC;`)
         
@@ -196,56 +196,7 @@ class TaskController{
     }) 
     }
 
-    async getAllForMasterTasks(req,res){   
-        checkStage()
-        const {id} = req.body;
-        const sql = (
-            `SELECT 
-            t.id AS task_id,
-            t.object AS object_id,
-            o.name AS object_name,
-            o.address AS object_address,
-            o.inn AS object_inn,
-            o.contact AS object_contact,
-            oc.category AS object_category,
-            oc.master AS object_category_master,
-            o.image AS object_image,
-            t.worker,
-			ts.id AS task_stage_id,
-            ts.stage AS task_stage,
-            t.work_category as work_category_id,
-			wc.name as work_category_name,
-            t.type_of_work as type_of_work_id,
-			tw.type as type_of_work_name,
-            t.date_of_creation,
-            t.date_of_deadline,
-            t.description,
-            u.id AS user_id,
-            u.fio AS user_fio,
-            u.phone AS user_phone
-        FROM 
-            tasks t
-        JOIN 
-            object o ON t.object = o.id
-		JOIN 
-            object_category oc ON o.category = oc.id
-        JOIN 
-            type_of_work tw ON t.type_of_work = tw.id
-        JOIN 
-            work_category wc ON t.work_category = wc.id
-        JOIN 
-            task_stage ts ON t.task_stage = ts.id
-        JOIN 
-            users u ON o.contact = u.id              
-        where oc.master = ? AND ts.id = 1 or ts.id = 2 or ts.id = 4 or ts.id = 5
-        ORDER BY 
-            ts.id ASC;`)
-        
-        db.all(sql,[id], (err,rows) => {
-            if (err) return res.json(err)
-            else return res.json(rows)
-    }) 
-    }
+  
 
 
     async getTaskByID(req,res){   
